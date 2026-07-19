@@ -7,11 +7,11 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  open: "bg-emerald-100 text-emerald-800",
-  closed: "bg-zinc-200 text-zinc-600",
-  coming_soon: "bg-amber-100 text-amber-800",
-  sold_out: "bg-rose-100 text-rose-800",
-  unknown: "bg-zinc-100 text-zinc-500",
+  open: "bg-emerald-400/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30",
+  closed: "bg-white/10 text-zinc-400 ring-1 ring-inset ring-white/15",
+  coming_soon: "bg-amber-400/15 text-amber-300 ring-1 ring-inset ring-amber-400/30",
+  sold_out: "bg-rose-400/15 text-rose-300 ring-1 ring-inset ring-rose-400/30",
+  unknown: "bg-white/5 text-zinc-400 ring-1 ring-inset ring-white/10",
 };
 
 export function statusLabel(status: string): string {
@@ -51,6 +51,25 @@ export function formatDateLong(iso: string | Date | null | undefined): string | 
     year: "numeric",
     timeZone: "America/Sao_Paulo",
   }).format(d);
+}
+
+// Dia e mês separados, para badges de data (ex.: "14" / "set").
+export function formatDayMonth(
+  iso: string | Date | null | undefined,
+): { day: string; month: string } | null {
+  if (!iso) return null;
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  const parts = new Intl.DateTimeFormat("pt-BR", {
+    day: "numeric",
+    month: "short",
+    timeZone: "America/Sao_Paulo",
+  }).formatToParts(d);
+  const day = parts.find((p) => p.type === "day")?.value ?? "";
+  const month = (parts.find((p) => p.type === "month")?.value ?? "").replace(
+    ".",
+    "",
+  );
+  return { day, month };
 }
 
 export function distanceLabel(km: number): string {

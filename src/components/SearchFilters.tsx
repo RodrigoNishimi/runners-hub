@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { MONTH_NAMES, distanceLabel, statusLabel } from "@/lib/format";
+import { CrosshairIcon, SearchIcon } from "./icons";
+
+const SELECT_CLASS =
+  "rounded-full border border-white/10 bg-zinc-900/80 px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:border-white/25 focus:border-lime-300/50";
 
 interface Props {
   facets: Record<string, Record<string, number>>;
@@ -79,7 +83,7 @@ export function SearchFilters({ facets }: Props) {
       aria-label={label}
       value={searchParams.get(name) ?? ""}
       onChange={(e) => setParams({ [name]: e.target.value || null })}
-      className="rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-700"
+      className={SELECT_CLASS}
     >
       <option value="">{label}</option>
       {entries.map((e) => (
@@ -103,13 +107,16 @@ export function SearchFilters({ facets }: Props) {
 
   return (
     <div className="flex flex-col gap-3">
-      <input
-        type="search"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Buscar por nome, cidade ou organizadora…"
-        className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-zinc-900 shadow-sm placeholder:text-zinc-400"
-      />
+      <div className="relative">
+        <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-500" />
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Buscar por nome, cidade ou organizadora…"
+          className="w-full rounded-2xl border border-white/10 bg-zinc-900/80 py-3 pl-12 pr-4 text-zinc-100 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.6)] transition-colors placeholder:text-zinc-500 focus:border-lime-300/50 focus:ring-2 focus:ring-lime-300/15 focus:outline-none"
+        />
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         {select(
           "state",
@@ -152,7 +159,7 @@ export function SearchFilters({ facets }: Props) {
           aria-label="Preço máximo"
           value={searchParams.get("maxPrice") ?? ""}
           onChange={(e) => setParams({ maxPrice: e.target.value || null })}
-          className="rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-700"
+          className={SELECT_CLASS}
         >
           <option value="">Preço até…</option>
           {[50, 100, 150, 200, 300, 500].map((v) => (
@@ -164,26 +171,27 @@ export function SearchFilters({ facets }: Props) {
         <button
           type="button"
           onClick={toggleNear}
-          className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+          className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
             nearActive
-              ? "border-sky-600 bg-sky-600 text-white"
-              : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
+              ? "border-lime-400 bg-lime-400 text-zinc-950"
+              : "border-white/10 bg-zinc-900/80 text-zinc-300 hover:border-white/25"
           }`}
         >
-          📍 Perto de mim
+          <CrosshairIcon className="h-3.5 w-3.5" />
+          Perto de mim
         </button>
-        <span className="mx-1 h-5 w-px bg-zinc-200" aria-hidden />
+        <span className="mx-1 h-5 w-px bg-white/10" aria-hidden />
         <select
           aria-label="Ordenar por"
           value={searchParams.get("sort") ?? ""}
           onChange={(e) => setParams({ sort: e.target.value || null })}
-          className="rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-700"
+          className={SELECT_CLASS}
         >
           <option value="">Ordenar: data</option>
           <option value="price">Ordenar: preço</option>
         </select>
       </div>
-      {geoError && <p className="text-sm text-rose-600">{geoError}</p>}
+      {geoError && <p className="text-sm text-rose-400">{geoError}</p>}
     </div>
   );
 }

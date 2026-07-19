@@ -59,26 +59,36 @@ export function EventList({ initial }: Props) {
 
   if (!hits.length) {
     return (
-      <p className="py-16 text-center text-zinc-500">
-        Nenhum evento encontrado com esses filtros.
-      </p>
+      <div className="flex flex-col items-center gap-3 rounded-3xl border border-dashed border-white/10 bg-zinc-900/40 py-20 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-2xl">
+          🏃
+        </span>
+        <p className="font-display font-semibold text-zinc-200">
+          Nenhum evento encontrado
+        </p>
+        <p className="max-w-sm text-sm text-zinc-500">
+          Tente remover algum filtro ou buscar por outra cidade ou distância.
+        </p>
+      </div>
     );
   }
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {hits.map((hit) => (
           <EventCard key={hit.id} event={hit} />
         ))}
       </div>
       <div ref={sentinelRef} className="h-px" />
       {loading && (
-        <p className="py-6 text-center text-sm text-zinc-400">Carregando…</p>
+        <div className="flex justify-center py-8" role="status" aria-label="Carregando mais eventos">
+          <span className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-700 border-t-lime-400" />
+        </div>
       )}
       {page >= totalPages && hits.length > 12 && (
-        <p className="py-6 text-center text-sm text-zinc-400">
-          Fim dos resultados.
+        <p className="py-8 text-center text-sm text-zinc-600">
+          🏁 Você chegou ao fim dos resultados.
         </p>
       )}
     </>

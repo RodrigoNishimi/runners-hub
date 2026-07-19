@@ -1,25 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ComponentType, type SVGProps } from "react";
 import { useRouter } from "next/navigation";
+import { CheckIcon, CircleHelpIcon, StarIcon } from "./icons";
 
 type Status = "registered" | "want" | "maybe";
 
-const OPTIONS: { value: Status; label: string; active: string }[] = [
+const OPTIONS: {
+  value: Status;
+  label: string;
+  active: string;
+  Icon: ComponentType<SVGProps<SVGSVGElement>>;
+}[] = [
   {
     value: "registered",
-    label: "✅ Inscrito",
-    active: "border-emerald-600 bg-emerald-600 text-white",
+    label: "Inscrito",
+    active: "border-emerald-400 bg-emerald-400 text-zinc-950",
+    Icon: CheckIcon,
   },
   {
     value: "want",
-    label: "⭐ Quero fazer",
-    active: "border-sky-600 bg-sky-600 text-white",
+    label: "Quero fazer",
+    active: "border-sky-400 bg-sky-400 text-zinc-950",
+    Icon: StarIcon,
   },
   {
     value: "maybe",
-    label: "🤔 Talvez",
-    active: "border-amber-500 bg-amber-500 text-white",
+    label: "Talvez",
+    active: "border-amber-400 bg-amber-400 text-zinc-950",
+    Icon: CircleHelpIcon,
   },
 ];
 
@@ -63,8 +72,8 @@ export function SaveEventButton({
   };
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      <span className="text-xs font-medium uppercase tracking-wide text-zinc-400">
+    <div className="flex flex-col items-end gap-1.5">
+      <span className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500">
         No meu calendário
       </span>
       <div className="flex gap-1.5">
@@ -74,12 +83,13 @@ export function SaveEventButton({
             type="button"
             disabled={busy}
             onClick={() => toggle(o.value)}
-            className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
+            className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-all disabled:opacity-60 ${
               status === o.value
                 ? o.active
-                : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
+                : "border-white/10 bg-zinc-900/80 text-zinc-300 hover:border-white/25 hover:text-zinc-100"
             }`}
           >
+            <o.Icon className="h-3.5 w-3.5" />
             {o.label}
           </button>
         ))}

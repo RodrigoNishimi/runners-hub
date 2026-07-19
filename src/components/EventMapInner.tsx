@@ -29,7 +29,7 @@ export default function EventMapInner({
       center={[lat, lng]}
       zoom={13}
       scrollWheelZoom={false}
-      className="z-0 h-64 w-full rounded-xl"
+      className="z-0 h-72 w-full"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

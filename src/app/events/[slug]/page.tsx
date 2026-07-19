@@ -13,6 +13,14 @@ import {
   statusLabel,
   statusStyle,
 } from "@/lib/format";
+import {
+  ArrowLeftIcon,
+  ArrowUpRightIcon,
+  CalendarIcon,
+  DownloadIcon,
+  FlagIcon,
+  MapPinIcon,
+} from "@/components/icons";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -88,45 +96,77 @@ export default async function EventPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {event.imageUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={event.imageUrl}
-          alt=""
-          className="mb-6 max-h-80 w-full rounded-2xl object-cover"
-        />
-      )}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+      <p className="mb-5 animate-fade-up">
+        <Link
+          href="/events"
+          className="inline-flex items-center gap-1.5 text-sm text-zinc-400 transition-colors hover:text-lime-300"
+        >
+          <ArrowLeftIcon className="h-4 w-4" />
+          Voltar para a busca
+        </Link>
+      </p>
+
+      {/* Hero com imagem (ou gradiente) e título sobreposto. */}
+      <div className="relative animate-fade-up overflow-hidden rounded-3xl border border-white/10">
+        {event.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={event.imageUrl}
+            alt=""
+            className="h-72 w-full object-cover sm:h-96"
+          />
+        ) : (
+          <div className="flex h-64 w-full items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-900 to-lime-950/60 sm:h-72">
+            <FlagIcon className="h-16 w-16 text-zinc-700" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-zinc-950/10" />
+        <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
           <span
-            className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyle(event.registrationStatus)}`}
+            className={`inline-block rounded-full px-3 py-1 text-xs font-semibold backdrop-blur-md ${statusStyle(event.registrationStatus)}`}
           >
             {statusLabel(event.registrationStatus)}
           </span>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight">
+          <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-zinc-50 sm:text-4xl">
             {event.name}
           </h1>
-          <p className="mt-1 text-lg text-zinc-600">
-            {date ?? "Data a confirmar"} · {locationLabel(event)}
+          <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-zinc-300 sm:text-base">
+            <span className="flex items-center gap-1.5">
+              <CalendarIcon className="h-4 w-4 text-lime-300" />
+              <span className="inline-block first-letter:uppercase">
+                {date ?? "Data a confirmar"}
+              </span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <MapPinIcon className="h-4 w-4 text-lime-300" />
+              {locationLabel(event)}
+            </span>
           </p>
-          {event.organizerName && (
-            <p className="mt-1 text-sm text-zinc-500">
-              Organização:{" "}
-              {event.organizerWebsite ? (
-                <a
-                  href={event.organizerWebsite}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:text-zinc-700"
-                >
-                  {event.organizerName}
-                </a>
-              ) : (
-                event.organizerName
-              )}
-            </p>
-          )}
         </div>
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+        {event.organizerName ? (
+          <p className="text-sm text-zinc-500">
+            Organização:{" "}
+            {event.organizerWebsite ? (
+              <a
+                href={event.organizerWebsite}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-zinc-300 underline decoration-zinc-600 underline-offset-4 transition-colors hover:text-lime-300 hover:decoration-lime-300"
+              >
+                {event.organizerName}
+              </a>
+            ) : (
+              <span className="font-medium text-zinc-300">
+                {event.organizerName}
+              </span>
+            )}
+          </p>
+        ) : (
+          <span />
+        )}
         <SaveEventButton
           eventId={event.id}
           initialStatus={saved}
@@ -135,36 +175,45 @@ export default async function EventPage({ params }: Props) {
       </div>
 
       {event.distances.length > 0 && (
-        <section className="mt-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+        <section className="mt-8">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
             Distâncias
           </h2>
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2.5">
             {event.distances.map((d) => (
               <span
                 key={d.label}
-                className="rounded-full bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700"
+                className="flex items-baseline gap-1.5 rounded-xl border border-white/10 bg-zinc-900/70 px-4 py-2.5"
               >
-                {d.label}
-                {d.distanceKm !== null && ` · ${d.distanceKm} km`}
+                <span className="font-display text-base font-bold text-zinc-50">
+                  {d.label}
+                </span>
+                {d.distanceKm !== null && (
+                  <span className="text-xs text-zinc-500">
+                    {d.distanceKm} km
+                  </span>
+                )}
               </span>
             ))}
           </div>
         </section>
       )}
 
-      <section className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-zinc-200 bg-white p-4">
+      <section className="mt-8 flex flex-wrap items-center gap-4 rounded-2xl border border-lime-300/20 bg-gradient-to-r from-lime-400/10 via-zinc-900/60 to-zinc-900/60 p-5 sm:p-6">
         <div className="mr-auto">
           {price ? (
-            <p className="text-lg">
-              Inscrições <span className="font-bold">a partir de {price}</span>
+            <p className="text-lg text-zinc-300">
+              Inscrições{" "}
+              <span className="font-display font-bold text-lime-300">
+                a partir de {price}
+              </span>
             </p>
           ) : (
-            <p className="text-lg text-zinc-600">
+            <p className="text-lg text-zinc-300">
               Valores no site oficial do evento
             </p>
           )}
-          <p className="text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-zinc-500">
             O RunnersHub é um agregador — a inscrição acontece no site oficial
             do evento.
           </p>
@@ -174,48 +223,46 @@ export default async function EventPage({ params }: Props) {
             href={event.officialUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white transition-colors hover:bg-emerald-500"
+            className="flex items-center gap-2 rounded-xl bg-lime-400 px-5 py-2.5 font-semibold text-zinc-950 shadow-[0_8px_30px_-8px_rgba(163,230,53,0.5)] transition-all hover:-translate-y-0.5 hover:bg-lime-300"
           >
-            Inscrever-se no site oficial ↗
+            Inscrever-se no site oficial
+            <ArrowUpRightIcon className="h-4 w-4" />
           </a>
         )}
         <a
           href={`/api/events/${event.slug}/ics`}
-          className="rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+          className="flex items-center gap-2 rounded-xl border border-white/10 bg-zinc-900/80 px-4 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:border-white/25 hover:text-zinc-100"
         >
-          📅 Adicionar à agenda (.ics)
+          <DownloadIcon className="h-4 w-4" />
+          Adicionar à agenda (.ics)
         </a>
       </section>
 
       {event.description && (
-        <section className="prose prose-zinc mt-8 max-w-none">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+        <section className="mt-10">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
             Sobre o evento
           </h2>
-          <p className="whitespace-pre-line text-zinc-700">
+          <p className="mt-3 whitespace-pre-line leading-relaxed text-zinc-300">
             {event.description}
           </p>
         </section>
       )}
 
       {event.latitude !== null && event.longitude !== null && (
-        <section className="mt-8">
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+        <section className="mt-10">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
             Local {event.address ? `— ${event.address}` : ""}
           </h2>
-          <EventMap
-            lat={event.latitude}
-            lng={event.longitude}
-            name={event.name}
-          />
+          <div className="mt-3 overflow-hidden rounded-2xl border border-white/10">
+            <EventMap
+              lat={event.latitude}
+              lng={event.longitude}
+              name={event.name}
+            />
+          </div>
         </section>
       )}
-
-      <p className="mt-8">
-        <Link href="/events" className="text-sm text-sky-700 hover:underline">
-          ← Voltar para a busca
-        </Link>
-      </p>
     </article>
   );
 }

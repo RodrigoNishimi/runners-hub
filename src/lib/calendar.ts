@@ -12,17 +12,17 @@ export const SAVED_STATUS_STYLES: Record<
 > = {
   registered: {
     label: "Inscrito",
-    chip: "bg-emerald-100 text-emerald-800 hover:bg-emerald-200",
-    dot: "bg-emerald-500",
+    chip: "bg-emerald-400/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/25 hover:bg-emerald-400/25",
+    dot: "bg-emerald-400",
   },
   want: {
     label: "Quero fazer",
-    chip: "bg-sky-100 text-sky-800 hover:bg-sky-200",
-    dot: "bg-sky-500",
+    chip: "bg-sky-400/15 text-sky-300 ring-1 ring-inset ring-sky-400/25 hover:bg-sky-400/25",
+    dot: "bg-sky-400",
   },
   maybe: {
     label: "Talvez",
-    chip: "bg-amber-100 text-amber-800 hover:bg-amber-200",
-    dot: "bg-amber-500",
+    chip: "bg-amber-400/15 text-amber-300 ring-1 ring-inset ring-amber-400/25 hover:bg-amber-400/25",
+    dot: "bg-amber-400",
   },
 };

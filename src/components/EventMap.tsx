@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 const InnerMap = dynamic(() => import("./EventMapInner"), {
   ssr: false,
   loading: () => (
-    <div className="h-64 animate-pulse rounded-xl bg-zinc-100" aria-hidden />
+    <div className="h-72 animate-pulse rounded-xl bg-zinc-900" aria-hidden />
   ),
 });
 
