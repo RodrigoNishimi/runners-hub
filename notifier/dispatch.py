@@ -67,6 +67,10 @@ def run_notify_cli(*extra_args: str) -> str:
     etl_dir, python = _etl_python()
     env = os.environ.copy()
     env["PYTHONPATH"] = str(etl_dir / "src")
+    # No Windows, stdout do processo filho cai no codepage do console
+    # (ex: cp1252) quando nao ha um console real anexado (pipe) — sem isso,
+    # nomes de evento acentuados quebram o decode como UTF-8 no processo pai.
+    env["PYTHONIOENCODING"] = "utf-8"
     proc = subprocess.run(
         [str(python), "-m", "corridas_etl.pipeline.notify", *extra_args],
         cwd=etl_dir,

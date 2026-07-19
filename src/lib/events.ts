@@ -58,7 +58,8 @@ function toDetail(row: EventRow): EventDetail {
     slug: row.slug,
     name: row.name,
     description: row.description,
-    startAt: row.start_at,
+    // Dependendo do build do driver, timestamptz chega como Date ou string.
+    startAt: row.start_at ? new Date(row.start_at) : null,
     registrationStatus: row.registration_status,
     officialUrl: row.official_url,
     imageUrl: row.image_url,
