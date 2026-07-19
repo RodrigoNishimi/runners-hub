@@ -1,0 +1,1 @@
+Plataforma web que centraliza eventos de corrida de rua em um único lugar, permitindo que o usuário explore corridas e monte seu calendário de provas do ano.
