@@ -2,9 +2,12 @@
 -- escrita so no schema app. Aplicar uma vez, como admin do banco:
 --   psql "$DATABASE_URL" -f sql/app_role.sql
 -- e usar app_web no DATABASE_URL do site (a senha e placeholder — troque).
+-- Obs: o Neon valida a forca da senha no control plane, entao o placeholder
+-- precisa misturar maiuscula/minuscula/numero/especial (nao pode ser algo
+-- trivial tipo "CHANGE_ME").
 
 DO $$ BEGIN
-  CREATE ROLE app_web LOGIN PASSWORD 'CHANGE_ME';
+  CREATE ROLE app_web LOGIN PASSWORD 'Ch4nge-Me-Pls!2026';
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 

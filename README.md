@@ -4,21 +4,24 @@ Plataforma web que centraliza eventos de corrida de rua em um único lugar,
 permitindo que o usuário explore corridas e monte seu calendário de provas do
 ano. Consome os dados do pipeline irmão
 [`ETL_pipeline_running_events`](../ETL_pipeline_running_events) (Postgres
-canônico + Meilisearch), que é tratado como **somente leitura** — o app só
+canônico), que é tratado como **somente leitura** — o app só
 escreve no schema `app` (contas, calendário pessoal, log de notificações).
 
 ## Arquitetura
 
 ```
-Meilisearch  ←(busca/facetas)─  Next.js (App Router, Vercel)  ─(SELECT)→  Postgres public.* (ETL)
-                                       │                                   Postgres app.*   (deste app)
-                                       └─ Auth.js (magic link via Resend)
+Next.js (App Router, Vercel)  ─(SELECT: dados + busca/facetas)→  Postgres public.* (ETL)
+       │                                                         Postgres app.*   (deste app)
+       └─ Auth.js (magic link via Resend)
 notifier/dispatch.py  ─(consome)→  pipeline.notify --json  →  e-mail (Resend)  [schtasks, pós-ETL]
 ```
 
-- **Busca/descoberta** (`/events`): Meilisearch via `/api/search` (a chave
-  fica no servidor). Filtros na URL: estado, cidade, distância, mês, status,
-  preço, "perto de mim" (geolocalização → `_geoRadius`), ordenação data/preço.
+- **Busca/descoberta** (`/events`): direto no Postgres (`src/lib/search.ts`),
+  sem serviço externo — texto fuzzy via `pg_trgm`/`unaccent`, "perto de mim"
+  via haversine em SQL puro (lat/long numéricos; não requer PostGIS), facetas
+  via `GROUP BY`. Filtros na URL: estado, cidade, distância, mês, status,
+  preço, geolocalização, ordenação data/preço.
+  Requer o `sql/008_search.sql` do ETL aplicado no banco.
 - **Página de evento** (`/events/[slug]`): SSR lendo o Postgres, mapa
   Leaflet/OSM, JSON-LD `SportsEvent`, link de inscrição oficial (o RunnersHub
   é agregador — não vende inscrição), `.ics` por evento.
@@ -32,14 +35,11 @@ notifier/dispatch.py  ─(consome)→  pipeline.notify --json  →  e-mail (Rese
 
 ## Rodando localmente
 
-Pré-requisitos: Node 20+, o Postgres do ETL populado, e o Meilisearch de dev:
+Pré-requisitos: Node 20+ e o Postgres do ETL populado (com o
+`sql/008_search.sql` aplicado — extensões `pg_trgm`/`unaccent` e o índice de
+busca):
 
 ```bash
-# no repo do ETL: sobe o Meilisearch e indexa eventos futuros
-docker compose up -d search
-PYTHONPATH=src MEILI_MASTER_KEY=dev_master_key python -m corridas_etl.serving.search --future-only
-
-# neste repo
 cp .env.example .env        # ajuste DATABASE_URL; gere AUTH_SECRET (npx auth secret)
 npm install
 npx drizzle-kit migrate     # cria o schema app no mesmo Postgres
@@ -71,14 +71,62 @@ Teste sem enviar: `python notifier/dispatch.py --dry-run`.
 
 | Peça | Onde |
 |---|---|
-| Postgres (ETL + app) | Neon free tier — ETL aponta `DATABASE_URL` pra lá |
-| Meilisearch | Fly.io (imagem `getmeili/meilisearch:v1.8`) — reindexado pelo ETL |
+| Postgres (ETL + app + busca) | Neon free tier — ETL aponta `DATABASE_URL` pra lá |
 | Site | Vercel Hobby (`npm run build`) |
 | E-mail | Resend free tier (magic link + avisos) |
 
-Variáveis na Vercel: `DATABASE_URL` (role `app_web`), `MEILI_URL`,
-`MEILI_SEARCH_KEY` (**search-only key**, nunca a master), `AUTH_SECRET`,
+Variáveis na Vercel: `DATABASE_URL` (role `app_web`), `AUTH_SECRET`,
 `AUTH_RESEND_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_SITE_URL`.
+
+## Identidade visual
+
+Tema "night run": fundo escuro premium com acento volt, pensado para o app
+mobile seguir a mesma linguagem.
+
+**Cores** (Tailwind v4, tokens em `src/app/globals.css`)
+
+| Papel | Valor | Uso |
+|---|---|---|
+| Fundo | `zinc-950` (`#09090b`) | base de toda a UI, `color-scheme: dark` |
+| Superfície | `zinc-900/70` sobre `zinc-950` | cards, painéis, inputs |
+| Borda sutil | `white/10` | contorno de cards, inputs, divisores |
+| Acento (volt) | `lime-400` (`#a3e635`) | CTAs primários, links ativos, destaques de preço/data |
+| Acento secundário | `sky-400`, `emerald-400`, `amber-400`, `rose-400` | badges de status (inscrições abertas/encerradas/esgotado), chips do calendário (`inscrito`/`quero fazer`/`talvez`) |
+| Texto primário | `zinc-50`/`zinc-100` | títulos, texto de destaque |
+| Texto secundário | `zinc-400`/`zinc-500` | metadados, legendas |
+
+Badges e chips usam o padrão `bg-{cor}-400/15 text-{cor}-300 ring-1 ring-inset
+ring-{cor}-400/30` (fundo translúcido + anel), não preenchimento sólido — ver
+`STATUS_STYLES` em `src/lib/format.ts` e `SAVED_STATUS_STYLES` em
+`src/lib/calendar.ts` como fonte única de verdade das cores de status.
+
+**Tipografia** (`next/font/google`, configurada em `src/app/layout.tsx`)
+
+- **Space Grotesk** (`--font-space-grotesk`, classe utilitária `font-display`)
+  — títulos (`h1`–`h3`), nome do evento no card, valores de preço/data em
+  destaque. Geométrica, com personalidade — assina a marca.
+- **Inter** (`--font-inter`, default do `font-sans`) — corpo de texto, labels,
+  inputs, navegação.
+
+**Formas e efeitos**
+
+- Raio de borda generoso: `rounded-xl`/`rounded-2xl` em cards e botões,
+  `rounded-full` em badges, chips e CTAs de pílula.
+- Glassmorphism leve: `backdrop-blur-md` + fundo translúcido em badges sobre
+  imagem (status do card, data) e no header sticky.
+- Glow de fundo fixo (`body::before` em `globals.css`): dois radiais suaves
+  (lime e sky) no topo da viewport, decorativos, não interativos.
+- Hover em cards/links: elevação (`-translate-y-1`) + sombra colorida em volt
+  (`shadow-[0_24px_48px_-20px_rgba(163,230,53,0.25)]`), não apenas mudança de
+  cor.
+- Micro-animação de entrada: `animate-fade-up` (fade + subida de 12px) em
+  cards e cabeçalhos de página.
+- Ícones: SVGs de traço (`stroke="currentColor"`, sem preenchimento) em
+  `src/components/icons.tsx` — sem lib externa, sem emoji na UI de produção.
+
+**Referências de implementação**: `src/app/globals.css` (tokens e tema base),
+`src/components/EventCard.tsx` (card premium com imagem/badges/hover),
+`src/components/SiteHeader.tsx` (header com blur e marca).
 
 ## Expansão futura
 
