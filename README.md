@@ -12,7 +12,7 @@ escreve no schema `app` (contas, calendário pessoal, log de notificações).
 ```
 Next.js (App Router, Vercel)  ─(SELECT: dados + busca/facetas)→  Postgres public.* (ETL)
        │                                                         Postgres app.*   (deste app)
-       └─ Auth.js (magic link via Resend)
+       └─ Auth.js (Google OAuth + DrizzleAdapter)
 notifier/dispatch.py  ─(consome)→  pipeline.notify --json  →  e-mail (Resend)  [schtasks, pós-ETL]
 ```
 
@@ -27,8 +27,8 @@ notifier/dispatch.py  ─(consome)→  pipeline.notify --json  →  e-mail (Rese
   é agregador — não vende inscrição), `.ics` por evento.
 - **Calendário pessoal** (`/calendar`): status `inscrito | quero fazer |
   talvez`, visão mês/lista, exportação `.ics` completa.
-- **Auth**: magic link por e-mail (Auth.js v5 + Resend + DrizzleAdapter), sem
-  senha. Busca funciona sem login.
+- **Auth**: login com Google (Auth.js v5 + provider Google OAuth +
+  DrizzleAdapter), sem senha. Busca funciona sem login.
 - **Notificações**: `notifier/dispatch.py` consome o feed do ETL
   (`pipeline.notify --json`), envia e-mail a quem salvou o evento (dedupe por
   usuário em `app.notification_log`) e depois `--mark-sent`.
@@ -46,8 +46,9 @@ npx drizzle-kit migrate     # cria o schema app no mesmo Postgres
 npm run dev                 # http://localhost:3000
 ```
 
-O login por e-mail exige `AUTH_RESEND_KEY`; sem ela, a navegação anônima
-(busca + página de evento + .ics avulso) funciona normalmente.
+O login exige `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` (crie um OAuth client
+no Google Cloud Console — ver DEPLOY.md); sem eles, a navegação anônima (busca
++ página de evento + .ics avulso) funciona normalmente.
 
 ## Migrations e banco
 
@@ -73,10 +74,12 @@ Teste sem enviar: `python notifier/dispatch.py --dry-run`.
 |---|---|
 | Postgres (ETL + app + busca) | Neon free tier — ETL aponta `DATABASE_URL` pra lá |
 | Site | Vercel Hobby (`npm run build`) |
-| E-mail | Resend free tier (magic link + avisos) |
+| Login | Google OAuth (Google Cloud Console, grátis) |
+| E-mail | Resend free tier (avisos do notifier) |
 
 Variáveis na Vercel: `DATABASE_URL` (role `app_web`), `AUTH_SECRET`,
-`AUTH_RESEND_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_SITE_URL`.
+`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXT_PUBLIC_SITE_URL`.
+(`RESEND_API_KEY`/`EMAIL_FROM` são só do notifier local, não vão pra Vercel.)
 
 ## Identidade visual
 
