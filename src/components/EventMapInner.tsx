@@ -1,6 +1,6 @@
 "use client";
 
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { Circle, MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -15,19 +15,27 @@ const icon = L.icon({
   iconAnchor: [12, 41],
 });
 
+// Raio aproximado da área destacada quando só conhecemos a cidade. Não
+// representa o local do evento — apenas indica "em algum lugar desta cidade".
+const CITY_AREA_RADIUS_M = 6000;
+
 export default function EventMapInner({
   lat,
   lng,
   name,
+  precise,
 }: {
   lat: number;
   lng: number;
   name: string;
+  precise: boolean;
 }) {
   return (
     <MapContainer
       center={[lat, lng]}
-      zoom={13}
+      // Local exato: aproxima na largada. Cidade: afasta para enquadrar a
+      // cidade inteira, sem sugerir um ponto específico.
+      zoom={precise ? 13 : 11}
       scrollWheelZoom={false}
       className="z-0 h-72 w-full"
     >
@@ -35,9 +43,24 @@ export default function EventMapInner({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <Marker position={[lat, lng]} icon={icon}>
-        <Popup>{name}</Popup>
-      </Marker>
+      {precise ? (
+        <Marker position={[lat, lng]} icon={icon}>
+          <Popup>{name}</Popup>
+        </Marker>
+      ) : (
+        // Sem alfinete: uma área difusa cobrindo a cidade evita que o usuário
+        // pense que a corrida acontece no centro geográfico.
+        <Circle
+          center={[lat, lng]}
+          radius={CITY_AREA_RADIUS_M}
+          pathOptions={{
+            color: "#a3e635",
+            weight: 1,
+            fillColor: "#a3e635",
+            fillOpacity: 0.12,
+          }}
+        />
+      )}
     </MapContainer>
   );
 }

@@ -10,6 +10,10 @@ export type RegistrationStatus =
   | "sold_out"
   | "unknown";
 
+// Precisao da coordenada: 'exact' = local real da largada; 'city' = apenas o
+// centro da cidade (geocoding por cidade/UF). null quando nao ha coordenadas.
+export type LocationPrecision = "exact" | "city" | null;
+
 export interface EventDetail {
   id: number;
   slug: string;
@@ -25,6 +29,7 @@ export interface EventDetail {
   address: string | null;
   latitude: number | null;
   longitude: number | null;
+  locationPrecision: LocationPrecision;
   price: number | null;
   organizerName: string | null;
   organizerWebsite: string | null;
@@ -46,6 +51,7 @@ interface EventRow {
   address: string | null;
   latitude: string | null;
   longitude: string | null;
+  location_precision: LocationPrecision;
   price: string | null;
   organizer_name: string | null;
   organizer_website: string | null;
@@ -69,6 +75,7 @@ function toDetail(row: EventRow): EventDetail {
     address: row.address,
     latitude: row.latitude !== null ? Number(row.latitude) : null,
     longitude: row.longitude !== null ? Number(row.longitude) : null,
+    locationPrecision: row.location_precision,
     price: row.price !== null ? Number(row.price) : null,
     organizerName: row.organizer_name,
     organizerWebsite: row.organizer_website,
@@ -83,7 +90,7 @@ const EVENT_SELECT = sql`
   SELECT e.id, e.slug, e.name, e.description, e.start_at,
          e.registration_status, e.official_url, e.image_url,
          e.city, e.state, e.country, e.address,
-         e.latitude, e.longitude, e.price,
+         e.latitude, e.longitude, e.location_precision, e.price,
          o.name AS organizer_name, o.website AS organizer_website,
          (SELECT json_agg(json_build_object('label', d.label,
                                             'distance_km', d.distance_km)

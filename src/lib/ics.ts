@@ -22,7 +22,11 @@ function toIcsEvent(e: EventDetail): EventAttributes | null {
       .join("\n"),
     location:
       [e.address, e.city, e.state].filter(Boolean).join(", ") || undefined,
-    ...(e.latitude !== null && e.longitude !== null
+    // Só fixamos coordenada quando aponta o local real; o centro da cidade
+    // cravaria um pino enganoso no calendário do usuário.
+    ...(e.locationPrecision === "exact" &&
+    e.latitude !== null &&
+    e.longitude !== null
       ? { geo: { lat: e.latitude, lon: e.longitude } }
       : {}),
     url: e.officialUrl ?? undefined,

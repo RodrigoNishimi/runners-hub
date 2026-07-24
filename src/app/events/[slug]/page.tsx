@@ -51,6 +51,12 @@ export default async function EventPage({ params }: Props) {
   const price = formatPrice(event.price);
   const date = formatDateLong(event.startAt);
 
+  // Só temos o ponto exato da largada quando a localização é precisa. Caso
+  // contrário, as coordenadas são apenas o centro da cidade (geocoding por
+  // cidade/UF) — não marcamos um ponto específico no mapa.
+  const hasCoords = event.latitude !== null && event.longitude !== null;
+  const preciseLocation = hasCoords && event.locationPrecision === "exact";
+
   // SEO: dados estruturados schema.org/Event (indexacao rica no Google).
   const jsonLd = {
     "@context": "https://schema.org",
@@ -67,7 +73,9 @@ export default async function EventPage({ params }: Props) {
         addressRegion: event.state ?? undefined,
         addressCountry: event.country,
       },
-      ...(event.latitude !== null && event.longitude !== null
+      // Só publicamos coordenadas nos dados estruturados quando apontam o local
+      // real — o centroide da cidade enganaria buscadores tanto quanto o mapa.
+      ...(preciseLocation
         ? {
             geo: {
               "@type": "GeoCoordinates",
@@ -249,16 +257,25 @@ export default async function EventPage({ params }: Props) {
         </section>
       )}
 
-      {event.latitude !== null && event.longitude !== null && (
+      {hasCoords && (
         <section className="mt-10">
           <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-            Local {event.address ? `— ${event.address}` : ""}
+            Local{" "}
+            {preciseLocation && event.address ? `— ${event.address}` : ""}
           </h2>
+          {!preciseLocation && (
+            <p className="mt-2 text-sm text-zinc-400">
+              Localização aproximada: mostramos a cidade
+              {event.city ? ` de ${locationLabel(event)}` : ""}. O ponto exato
+              da largada ainda não foi divulgado.
+            </p>
+          )}
           <div className="mt-3 overflow-hidden rounded-2xl border border-white/10">
             <EventMap
-              lat={event.latitude}
-              lng={event.longitude}
+              lat={event.latitude!}
+              lng={event.longitude!}
               name={event.name}
+              precise={preciseLocation}
             />
           </div>
         </section>
